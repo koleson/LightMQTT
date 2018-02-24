@@ -32,7 +32,7 @@ fileprivate enum PacketFlags: UInt8 {
     case dup =           0b0000_1000
 }
 
-final class LightMQTT {
+public final class LightMQTT {
 
     enum MQTTMessageParserState {
         case decodingHeader
