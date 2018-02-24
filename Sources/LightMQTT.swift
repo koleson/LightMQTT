@@ -40,21 +40,21 @@ public final class LightMQTT {
         case decodingData
     }
 
-    var receivingMessage: ((_ topic: String, _ message: String) -> ())?
-    var receivingBuffer: ((_ topic: String, _ buffer: UnsafeBufferPointer<UTF8.CodeUnit>) -> ())?
-    var receivingBytes: ((_ topic: String, _ bytes: [UTF8.CodeUnit]) -> ())?
-    var receivingData: ((_ topic: String, _ data: Data) -> ())?
+    public var receivingMessage: ((_ topic: String, _ message: String) -> ())?
+    public var receivingBuffer: ((_ topic: String, _ buffer: UnsafeBufferPointer<UTF8.CodeUnit>) -> ())?
+    public var receivingBytes: ((_ topic: String, _ bytes: [UTF8.CodeUnit]) -> ())?
+    public var receivingData: ((_ topic: String, _ data: Data) -> ())?
 
     public struct Options {
         public init() {}
-        var port: Int? = nil
-        var pingInterval: UInt16 = 10
-        var useTLS = false
-        var username: String? = nil
-        var password: String? = nil
-        var clientId: String? = nil
-        var bufferSize: Int = 4096
-        var readQosClass: DispatchQoS.QoSClass = .background
+        public var port: Int? = nil
+        public var pingInterval: UInt16 = 10
+        public var useTLS = false
+        public var username: String? = nil
+        public var password: String? = nil
+        public var clientId: String? = nil
+        public var bufferSize: Int = 4096
+        public var readQosClass: DispatchQoS.QoSClass = .background
 
         var concretePort: Int {
             return port ?? (useTLS ? 8883 : 1883)
@@ -81,7 +81,7 @@ public final class LightMQTT {
 
     // MARK: - Public interface
 
-    init(host: String, options: Options = Options()) {
+    public init(host: String, options: Options = Options()) {
         self.host = host
         self.options = options
     }
@@ -90,7 +90,7 @@ public final class LightMQTT {
         disconnect()
     }
 
-    func connect(completion: ((_ success: Bool) -> ())? = nil) {
+    public func connect(completion: ((_ success: Bool) -> ())? = nil) {
         openStreams() { [weak self] streams in
             guard let strongSelf = self, let streams = streams else {
                 completion?(false)
@@ -120,15 +120,15 @@ public final class LightMQTT {
         closeStreams()
     }
 
-    func subscribe(to topic: String) {
+    public func subscribe(to topic: String) {
         mqttSubscribe(to: topic)
     }
 
-    func unsubscribe(from topic: String) {
+    public func unsubscribe(from topic: String) {
         mqttUnsubscribe(from: topic)
     }
 
-    func publish(to topic: String, message: Data?) {
+    public func publish(to topic: String, message: Data?) {
         mqttPublish(to: topic, message: message ?? Data())
     }
 
@@ -141,7 +141,7 @@ public final class LightMQTT {
             // stop pinging server if client deallocated or stream closed
             guard let output = self?.outputStream, output.streamStatus == .open else {
                 return
-            } 
+            }
 
             self?.mqttPing()
             self?.delayedPing()
@@ -155,9 +155,9 @@ public final class LightMQTT {
         var outputStream: OutputStream?
 
         Stream.getStreamsToHost(withName: host,
-                                port: options.concretePort,
-                                inputStream: &inputStream,
-                                outputStream: &outputStream)
+                port: options.concretePort,
+                inputStream: &inputStream,
+                outputStream: &outputStream)
 
         guard let input = inputStream, let output = outputStream else {
             completion(nil)
@@ -181,7 +181,7 @@ public final class LightMQTT {
                 completion(nil)
                 return
             }
-            
+
             completion((input, output))
         }
     }
@@ -292,7 +292,7 @@ public final class LightMQTT {
                         }
 
                         let pointer = UnsafeBufferPointer(start: messageBuffer + topicLength + 2,
-                                                          count: byteCount - topicLength - 2)
+                                count: byteCount - topicLength - 2)
 
                         if let closure = receivingMessage, let message = String(bytes: pointer, encoding: .utf8) {
                             closure(topic, message)
@@ -308,8 +308,8 @@ public final class LightMQTT {
 
                         if let closure = receivingData {
                             closure(topic, Data(bytesNoCopy: messageBuffer + topicLength + 2,
-                                                count: byteCount - topicLength - 2,
-                                                deallocator: .none))
+                                    count: byteCount - topicLength - 2,
+                                    deallocator: .none))
                         }
 
                         messageParserState = .decodingHeader
@@ -420,12 +420,12 @@ public final class LightMQTT {
         // http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718081
 
         let packet = ControlPacket(type: .pingreq)
-        
+
         send(packet: packet)
     }
 
     private func send(packet: ControlPacket) {
-        guard let output = outputStream else { return } 
+        guard let output = outputStream else { return }
 
         let serialized = packet.encoded
         var toSend = serialized.count
@@ -479,7 +479,7 @@ fileprivate struct ControlPacket {
         // http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718023
         var workingLength = UInt(variableHeader.data.count + payload.data.count)
         var encoded = Data()
-        
+
         while true {
             var byte = UInt8(workingLength & 0x7F)
             workingLength >>= 7
@@ -491,7 +491,7 @@ fileprivate struct ControlPacket {
                 return encoded
             }
         }
-    } 
+    }
 
     var encoded: Data {
         var bytes = Data()
