@@ -45,7 +45,7 @@ public final class LightMQTT {
     var receivingBytes: ((_ topic: String, _ bytes: [UTF8.CodeUnit]) -> ())?
     var receivingData: ((_ topic: String, _ data: Data) -> ())?
 
-    struct Options {
+    public struct Options {
         var port: Int? = nil
         var pingInterval: UInt16 = 10
         var useTLS = false
